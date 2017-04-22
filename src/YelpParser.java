@@ -51,7 +51,7 @@ public class YelpParser {
 		
 		
 		// Join Business and Review Yelp data on 'business_id' 
-		Dataset<Row> joinedDF = reviewSQLDF.join(businessSQLDF, businessSQLDF.col("business_id").equalTo(reviewSQLDF.col("business_id")), "left_outer");
+		Dataset<Row> joinedDF = reviewSQLDF.join(businessSQLDF, reviewSQLDF.col("business_id").equalTo(businessSQLDF.col("business_id")), "left_outer");
 		
 		joinedDF.show();
 		
