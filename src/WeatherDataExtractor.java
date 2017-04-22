@@ -21,13 +21,13 @@ public class WeatherDataExtractor {
 
 	public static void main(String[] args) throws Exception {
 		wbanConversion = new HashMap<String, String>();
-		wbanConversion.put("13881", "Texas");
-		wbanConversion.put("94870", "Minnesota");
-		wbanConversion.put("03149", "Colorado");
-		wbanConversion.put("23054", "New York");
-		wbanConversion.put("94811", "Pitt");
-		wbanConversion.put("04805", "Cleveage");
-		wbanConversion.put("94823", "Madis");
+		wbanConversion.put("13881", "Charlotte");
+		wbanConversion.put("94870", "Urbana-Champaign");
+		wbanConversion.put("03149", "Phoenix");
+		wbanConversion.put("23054", "Las Vegas");
+		wbanConversion.put("94811", "Madison");
+		wbanConversion.put("04805", "Cleveland");
+		wbanConversion.put("94823", "Pittsburgh");
 
 		
 		System.out.println(System.getProperty("hadoop.home.dir"));
@@ -37,7 +37,7 @@ public class WeatherDataExtractor {
 
 		FileUtils.deleteQuietly(new File(outputPath));
 
-		SparkConf conf = new SparkConf().setAppName("word-counter").setMaster("local").set("spark.cores.max", "10");
+		SparkConf conf = new SparkConf().setAppName("WX-Parser").setMaster("local").set("spark.cores.max", "10");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		
 		//pulls in file
