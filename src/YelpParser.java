@@ -38,15 +38,22 @@ public class YelpParser {
 		businessDataFrame.createOrReplaceTempView("businessTable");
 		
 		//Pull business id and state to create new DataFrame
-		Dataset<Row> businessSQLDF = spark.sql("SELECT business_id, state FROM businessTable");
+		Dataset<Row> businessSQLDF = spark.sql("SELECT business_id, state, stars as avgstars FROM businessTable");
 		
 		
 		Dataset<Row> reviewDataFrame = spark.read().json(yelpReviewInputPath);
 		
 		reviewDataFrame.createOrReplaceTempView("reviewTable");
 		
-		Dataset<Row> reviewSQLDF = spark.sql("SELECT business_id, state, stars FROM reviewTable");
-	
+		Dataset<Row> reviewSQLDF = spark.sql("SELECT business_id, date, stars FROM reviewTable");
+		
+		//df1.join(df2, col("df1Key").equalTo(col("df2Key")), "outer");
+		
+		
+		// Join Business and Review Yelp data on 'business_id' 
+		Dataset<Row> joinedDF = reviewSQLDF.join(businessSQLDF, businessSQLDF.col("business_id").equalTo(reviewSQLDF.col("business_id")), "left_outer");
+		
+		joinedDF.show();
 		
 	}
 }
