@@ -13,3 +13,6 @@ $SPARK_HOME/bin/spark-shell
 
 //run job
 $SPARK_HOME/bin/spark-submit --class "SparkWordCount" --master local[4] target/simple-project-1.0.jar /s/richmond/a/nobackup/cs455/benscott/yarn-site-benscott/app-logs/benscott/logs/application_1491608506700_0089/ /out
+
+//compile with pom
+mvn package
