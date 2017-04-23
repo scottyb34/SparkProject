@@ -1,9 +1,7 @@
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -12,7 +10,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
 
 public class WeatherDataExtractor {
 	public static Map<String, String> wbanConversion;
@@ -51,7 +48,7 @@ public class WeatherDataExtractor {
 				.map(e -> (String) e.replaceFirst("^.....", wbanConversion.get(e.substring(0, 5))))
 				.map(e -> Arrays.asList(e.split(",")))
 				.map(e -> IntStream.range(0, e.size())
-						.filter(i -> Arrays.asList(new Integer[] { 0, 6, 10, 28, 30, 40 }).contains(new Integer(i)))
+						.filter(i -> Arrays.asList(new Integer[] { 0, 1, 6, 10, 28, 30, 40 }).contains(new Integer(i)))
 						.mapToObj(e::get).map(e2 -> e2.toString()).collect(Collectors.joining(",")));
 
 		// JavaPairRDD<String, Integer> counts = rdd.flatMap(x ->
