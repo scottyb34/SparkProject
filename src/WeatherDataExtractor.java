@@ -1,5 +1,6 @@
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,32 +14,54 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.rdd.RDD;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 
-public class WeatherDataExtractor {
+public class WeatherDataExtractor implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public static Map<String, String> wbanConversion;
+	
+	private static JavaRDD<String> wban;
+	private Dataset<Row> wbanDF;
+	private SparkSession spark;
+	
+	
+	public WeatherDataExtractor(SparkSession sparkSesh) { spark = sparkSesh; }
+	
+	public JavaRDD<String> getWBAN() { return wban; }
+	public Dataset<Row> getWBAN_DF() { return wbanDF; }
 
-	public static void main(String[] args) throws Exception {
+	public void parseWBAN(String inPath) throws Exception {
 		wbanConversion = new HashMap<String, String>();
-		wbanConversion.put("13881", "Charlotte");
-		wbanConversion.put("94870", "Urbana-Champaign");
-		wbanConversion.put("03149", "Phoenix");
-		wbanConversion.put("23054", "Las Vegas");
-		wbanConversion.put("94811", "Madison");
-		wbanConversion.put("04805", "Cleveland");
-		wbanConversion.put("94823", "Pittsburgh");
+		wbanConversion.put("13881", "NC");  //Charlotte
+		wbanConversion.put("94870", "IL");  //Urban-Popping-Champagne
+		wbanConversion.put("03149", "AZ");  //Phoenix
+		wbanConversion.put("23054", "NV");  //Las Vegas
+		wbanConversion.put("94811", "WI");  //Madison
+		wbanConversion.put("04805", "OH");  //Cleveland 
+		wbanConversion.put("94823", "PA");  //Pittsburgh
 
 		System.out.println(System.getProperty("hadoop.home.dir"));
 
-		String inputPath = args[0];
-		String outputPath = args[1];
+		String inputPath = inPath;
 
-		FileUtils.deleteQuietly(new File(outputPath));
-
-		SparkConf conf = new SparkConf().setAppName("WX-Parser").setMaster("local").set("spark.cores.max", "10");
-		JavaSparkContext sc = new JavaSparkContext(conf);
+		//SparkConf conf = new SparkConf().setAppName("WX-Parser").setMaster("local").set("spark.cores.max", "10");
+		//JavaSparkContext sc = new JavaSparkContext(conf);
 
 		// pulls in file
-		JavaRDD<String> rdd = sc.textFile(inputPath);
+		
+		JavaRDD<String> rdd = spark.sparkContext().textFile(inputPath, 10).toJavaRDD();
 
 		// filter predicate
 		// Function<String, Boolean> filterPredicate = e -> e.substring(0,
@@ -47,7 +70,7 @@ public class WeatherDataExtractor {
 		// List<Integer> ind =(List<Integer>) Arrays.asList(new
 		// Integer[]{6,10,28,30,40});
 
-		JavaRDD<String> wban = rdd.filter(e -> e.substring(0, 5).matches("13881|94870|03149|23054|94811|04805|94823"))
+		wban = rdd.filter(e -> e.substring(0, 5).matches("13881|94870|03149|23054|94811|04805|94823"))
 				.map(e -> (String) e.replaceFirst("^.....", wbanConversion.get(e.substring(0, 5))))
 				.map(e -> Arrays.asList(e.split(",")))
 				.map(e -> IntStream.range(0, e.size())
@@ -77,9 +100,43 @@ public class WeatherDataExtractor {
 		// String.valueOf(System.currentTimeMillis() - time));
 
 		// counts.saveAsTextFile(outputPath);
-		wban.saveAsTextFile(outputPath);
-		sc.close();
+		
+		//wban.saveAsTextFile(outputPath);
+		
+		createSchema();
 
+	}
+	
+	private void createSchema() {
+		
+		// Seven attributes needed for NOAA Dataframe / Dataset object 
+		String schemaString = "weatherState weatherDate tempAvg dewPt snow precTotal wind";
+		
+		List<StructField> fields = new ArrayList<>();
+		for (String fieldName : schemaString.split(" ")) {
+			StructField field = DataTypes.createStructField(fieldName, DataTypes.StringType, true);
+			fields.add(field);
+		}
+		
+		StructType schema = DataTypes.createStructType(fields);
+		
+		SQLContext sqlContext = new SQLContext(spark.sparkContext());
+		
+		JavaRDD<Row> wbanRowRDD = wban.map(new Function<String, Row>() {
+			  @Override
+			  public Row call(String record) throws Exception {
+				String date = "";
+			    String[] attributes = record.split(",");
+			    if (attributes.length < 7) return RowFactory.create("");
+			    if (attributes[1].length() >= 7)
+			    	date = attributes[1].substring(0, 4) + "-" + attributes[1].substring(4, 6) + "-" + attributes[1].substring(6, 8);
+			    return RowFactory.create(attributes[0], date, attributes[2], attributes[3], attributes[4], attributes[5], attributes[6]);
+			  }
+			});
+		
+		
+		wbanDF = spark.createDataFrame(wbanRowRDD, schema);
+		
 	}
 
 }

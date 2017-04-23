@@ -18,18 +18,16 @@ import org.apache.spark.sql.SparkSession;
 
 public class YelpParser {
 	
+	private Dataset<Row> joinedDF;
+	private SparkSession spark;
 	
-	public static void main(String[] args) {
-		String yelpBusinessInputPath = args[0];
-		String yelpReviewInputPath = args[1];
-		String outputPath = args[2];
-
-		FileUtils.deleteQuietly(new File(outputPath));
-
-		SparkSession spark = SparkSession
-				  .builder()
-				  .appName("YelpDataParser")
-				  .getOrCreate();
+	public YelpParser(SparkSession sparkSesh) { spark = sparkSesh; }
+	
+	public Dataset<Row> getJoinedDF() { return joinedDF; }
+	
+	public void parseYelpDataGet(String yelpBusinessPath, String yelpReviewPath) {
+		String yelpBusinessInputPath = yelpBusinessPath;
+		String yelpReviewInputPath = yelpReviewPath;
 		
 		// Creates DataFrame object
 		Dataset<Row> businessDataFrame = spark.read().json(yelpBusinessInputPath);
@@ -51,9 +49,9 @@ public class YelpParser {
 		
 		
 		// Join Business and Review Yelp data on 'business_id' 
-		Dataset<Row> joinedDF = reviewSQLDF.join(businessSQLDF, reviewSQLDF.col("business_id").equalTo(businessSQLDF.col("business_id")), "left_outer");
+		joinedDF = reviewSQLDF.join(businessSQLDF, reviewSQLDF.col("business_id").equalTo(businessSQLDF.col("business_id")), "left_outer");
 		
-		joinedDF.show();
+		//joinedDF.show();
 		
 	}
 }
