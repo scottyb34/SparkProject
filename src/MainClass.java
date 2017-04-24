@@ -21,12 +21,9 @@ public class MainClass {
 		yelper.parseYelpDataGet(args[0], args[1]);
 		Dataset<Row> joinedYelpDataFrame = yelper.getJoinedDF();
 		*/
-		WeatherDataExtractor weatherExtract = new WeatherDataExtractor(spark);
+		NoaaDataExtractor noaaReader = new NoaaDataExtractor(spark);
 		
-		weatherExtract.parseWBAN(args[0]);
-		Dataset<Row> wbanDF = weatherExtract.getWBAN_DF();
-		
-		wbanDF.show();
+		noaaReader.extractData(args[0]);
 		
 		//joinedYelpDataFrame.show();
 		
