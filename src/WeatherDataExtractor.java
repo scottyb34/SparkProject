@@ -7,14 +7,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.SparkSession;
 
 public class WeatherDataExtractor {
 	public static Map<String, String> wbanConversion;
 
-	public static void main(String[] args) throws Exception {
+	public void extract(String input, SparkSession spark) throws Exception {
 		wbanConversion = new HashMap<String, String>();
 		wbanConversion.put("13881", "NC");
 		wbanConversion.put("94870", "IL");
@@ -26,16 +25,13 @@ public class WeatherDataExtractor {
 
 		System.out.println(System.getProperty("hadoop.home.dir"));
 
-		String inputPath = args[0];
-		String outputPath = args[1];
+		String inputPath = input;
+		String outputPath = "/noaaOut";
 
 		FileUtils.deleteQuietly(new File(outputPath));
 
-		SparkConf conf = new SparkConf().setAppName("WX-Parser").setMaster("local").set("spark.cores.max", "10");
-		JavaSparkContext sc = new JavaSparkContext(conf);
-
 		// pulls in file
-		JavaRDD<String> rdd = sc.textFile(inputPath);
+		JavaRDD<String> rdd = spark.sparkContext().textFile(inputPath, 10).toJavaRDD();
 
 		// filter predicate
 		// Function<String, Boolean> filterPredicate = e -> e.substring(0,
@@ -52,13 +48,17 @@ public class WeatherDataExtractor {
 				.map(e -> Arrays.asList(e.split(",")))
 				.map(e -> IntStream.range(0, e.size())
 				.filter(i -> Arrays.asList(e.size() > 30 ? second : first).contains(new Integer(i)))
-				.mapToObj(e::get).map(e2 -> e2.toString())
+				.mapToObj(e::get).map(e2 -> e2.toString().matches("[0-9]{8}") ? (e2.toString().substring(0, 4) + "-" + e2.toString().substring(4, 6) + "-" + e2.toString().substring(6, 8)) : e2.toString())
 				.collect(Collectors.joining(",")));
 
 
 		wban.saveAsTextFile(outputPath);
-		sc.close();
 
 	}
+	
+//	public String makeDate(String s) {
+//		return s.substring(0, 4) + "-" + s.substring(4, 6) + "-" + s.substring(6, 8);
+//	}
+//	
 
 }
