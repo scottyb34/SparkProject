@@ -51,11 +51,11 @@ public class WeatherDataExtractor {
 				.map(e -> (String) e.replaceFirst("^.....", wbanConversion.get(e.substring(0, 5))))
 				.map(e -> Arrays.asList(e.split(",")))
 				.map(e -> IntStream.range(0, e.size())
-						.filter(i -> Arrays.asList(e.size() > 30 ? second : first).contains(new Integer(i)))
-						.mapToObj(e::get).map(e2 -> e2.toString())
-						.collect(Collectors.joining(",")));
+				.filter(i -> Arrays.asList(e.size() > 30 ? second : first).contains(new Integer(i)))
+				.mapToObj(e::get).map(e2 -> e2.toString())
+				.collect(Collectors.joining(",")));
 
-	
+
 		wban.saveAsTextFile(outputPath);
 		sc.close();
 
