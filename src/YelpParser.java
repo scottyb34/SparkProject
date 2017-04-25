@@ -5,9 +5,6 @@
  */
 
 
-import java.io.File;
-
-import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -41,13 +38,13 @@ public class YelpParser {
 		
 		Dataset<Row> reviewSQLDF = spark.sql("SELECT business_id, date, stars FROM reviewTable");
 		
-		//df1.join(df2, col("df1Key").equalTo(col("df2Key")), "outer");
+		businessSQLDF.createOrReplaceTempView("filteredBusinessTable");
+
+		reviewSQLDF.createOrReplaceTempView("filteredReviewTable");
 		
-		
-		// Join Business and Review Yelp data on 'business_id' 
-		joinedDF = reviewSQLDF.join(businessSQLDF, reviewSQLDF.col("business_id").equalTo(businessSQLDF.col("business_id")), "left_outer");
-		
-		//joinedDF.show();
+		joinedDF = spark.sql("select filteredReviewTable.business_id, date, stars, state, avgstars from filteredReviewTable left "
+				+ "join filteredBusinessTable on filteredBusinessTable.business_id = filteredReviewTable.business_id");
+
 		
 	}
 }

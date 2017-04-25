@@ -51,7 +51,9 @@ public class WeatherDataExtractor{
 				.map(e -> Arrays.asList(e.split(",")))
 				.map(e -> IntStream.range(0, e.size())
 				.filter(i -> Arrays.asList(e.size() > 30 ? second : first).contains(new Integer(i)))
-				.mapToObj(e::get).map(e2 -> e2.toString().matches("[0-9]{8}") ? (e2.toString().substring(0, 4) + "-" + e2.toString().substring(4, 6) + "-" + e2.toString().substring(6, 8)) : e2.toString())
+				.mapToObj(e::get)
+				.map(e2 -> e2.toString().matches("[0-9]{8}") ? (e2.toString().substring(0, 4) + "-" + e2.toString().substring(4, 6) + "-" + e2.toString().substring(6, 8)) : 
+					e2.toString().matches(".*M.*") ? "0" : e2.toString().matches(".*T.*") ? "0.1" : e2.toString())
 				.collect(Collectors.joining(",")));
 
 

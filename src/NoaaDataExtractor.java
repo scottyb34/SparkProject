@@ -17,15 +17,11 @@ public class NoaaDataExtractor {
 		spark = sesh;
 	}
 	
-	public void extractData(String inputPath) throws AnalysisException {
+	public Dataset<Row> extractData(String inputPath) throws AnalysisException {
 	
 		Dataset<Row> df = spark.read().csv(inputPath);
-		
-		df.createTempView("allDataTable");
 
-		//Dataset<Row> desiredCol = spark.sql("SELECT _c0, _c1, _c6, _c10, _c27 from allDataTable");
-		
-		df.show();
+		return df;
 	}
 	
  }
