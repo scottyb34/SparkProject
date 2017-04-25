@@ -10,7 +10,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.SparkSession;
 
-public class WeatherDataExtractor {
+public class WeatherDataExtractor{
+
 	public static Map<String, String> wbanConversion;
 
 	public void extract(String input, SparkSession spark) throws Exception {
@@ -31,6 +32,7 @@ public class WeatherDataExtractor {
 		FileUtils.deleteQuietly(new File(outputPath));
 
 		// pulls in file
+
 		JavaRDD<String> rdd = spark.sparkContext().textFile(inputPath, 10).toJavaRDD();
 
 		// filter predicate
@@ -42,6 +44,7 @@ public class WeatherDataExtractor {
 		Integer[] first = new Integer[] { 0, 1, 4, 6, 13, 14, 19 };
 
 		Integer[] second = new Integer[] { 0, 1, 6, 10, 28, 30, 40 };
+
 
 		JavaRDD<String> wban = rdd.filter(e -> e.substring(0, 5).matches("13881|94870|23183|23169|14837|14820|94823"))
 				.map(e -> (String) e.replaceFirst("^.....", wbanConversion.get(e.substring(0, 5))))
@@ -56,9 +59,5 @@ public class WeatherDataExtractor {
 
 	}
 	
-//	public String makeDate(String s) {
-//		return s.substring(0, 4) + "-" + s.substring(4, 6) + "-" + s.substring(6, 8);
-//	}
-//	
 
 }
